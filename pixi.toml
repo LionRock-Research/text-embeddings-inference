@@ -1,0 +1,29 @@
+[project]
+authors = ["Junjie Zhang <junj.jay.zhang@gmail.com>"]
+channels = ["https://meta-forge.cn-gd.ufileos.com", "nvidia/label/cuda-12.4.0", "nvidia", "pytorch", "https://fast.prefix.dev/conda-forge", "conda-forge"]
+description = "This file aims to building and runing TEI with pixi"
+name = "text-embeddings-inference"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[dependencies]
+rust = ">=1.81.0,<2"
+cuda = ">=12.4.0,<13"
+openssl = ">=3.4.0,<4"
+
+[tasks]
+"run_baai_emb" = {cmd = "text-embeddings-router --model-id BAAI/bge-large-en-v1.5 --port 8080 --max-batch-tokens 65536", env = {PATH="/root/.cargo/bin:$PATH"}}
+
+[feature.build.dependencies]
+gcc = "<=13"
+gxx = "<=13"
+cuda-driver-dev = "12.4.*"
+binutils = ">=2.43,<3"
+cuda-version = { channel = "conda-forge" }
+
+[feature.build.tasks]
+"set_up_build_env" = {cmd = "ln -s $CONDA_PREFIX/lib/stubs/libcuda.so $CONDA_PREFIX/lib/libcuda.so"}
+"build_cuda" = {cmd = "cargo install --path router -F candle-cuda -F http --no-default-features", env = {CUDA_ROOT = "$CONDA_PREFIX", OPENSSL_DIR = "$CONDA_PREFIX", LD_LIBRARY_PATH = "$CONDA_PREFIX/lib/:$LD_LIBRARY_PATH"}}
+
+[environments]
+build = { features = ["build"], solve-group = "default" }
